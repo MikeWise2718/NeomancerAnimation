@@ -1,0 +1,2057 @@
+{
+  "nodes": [
+    {
+      "label": "Extensions",
+      "reference": "SampleAnalyzer.Extensions",
+      "type": "Unknown"
+    },
+    {
+      "label": "Model",
+      "reference": "SampleAnalyzer.Model",
+      "type": "Unknown"
+    },
+    {
+      "label": "Program",
+      "reference": "SampleAnalyzer.Program",
+      "type": "Class",
+      "children": [
+        {
+          "label": "Main",
+          "reference": "System.Threading.Tasks.Task",
+          "type": "Method",
+          "children": [
+            {
+              "label": "Main",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "args",
+                  "reference": "string[]",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "Main",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "Main-0",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "Main-0-0",
+                      "reference": "args.Length < 1",
+                      "type": "Statement",
+                      "category": "LessThanExpression"
+                    },
+                    {
+                      "label": "Main-0-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "Main-0-1-0",
+                          "reference": "Console.WriteLine(\"No solutions to be parsed. Exiting...\");",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        },
+                        {
+                          "label": "Main-0-1-1",
+                          "reference": "return;",
+                          "type": "Statement",
+                          "category": "ReturnStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Main-1",
+                  "reference": "var visualStudioInstances = MSBuildLocator.QueryVisualStudioInstances().ToArray();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "Main-2",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "Main-2-0",
+                      "reference": "visualStudioInstances.Length == 0",
+                      "type": "Statement",
+                      "category": "EqualsExpression"
+                    },
+                    {
+                      "label": "Main-2-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "Main-2-1-0",
+                          "reference": "Console.WriteLine(\"No compiler found in system. Exiting...\");",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        },
+                        {
+                          "label": "Main-2-1-1",
+                          "reference": "return;",
+                          "type": "Statement",
+                          "category": "ReturnStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "Main-3",
+                  "reference": "var instance = visualStudioInstances[0];",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "Main-4",
+                  "reference": "Console.WriteLine($\"Using MSBuild at '{instance.MSBuildPath}' to load projects.\");",
+                  "type": "Statement",
+                  "category": "ExpressionStatement"
+                },
+                {
+                  "label": "Main-5",
+                  "reference": "MSBuildLocator.RegisterInstance(instance);",
+                  "type": "Statement",
+                  "category": "ExpressionStatement"
+                },
+                {
+                  "label": "Main-6",
+                  "reference": "using (var workspace = MSBuildWorkspace.Create())\r\n            {\r\n                // Print message for WorkspaceFailed event to help diagnosing project load failures.\r\n                workspace.WorkspaceFailed += (o, e) => Console.WriteLine(e.Diagnostic.Message);\r\n\r\n                var targetPath = args[0];\r\n                if (targetPath.EndsWith(\".sln\"))\r\n                {\r\n                    Console.WriteLine($\"Loading solution '{targetPath}'\");\r\n\r\n                    // Attach progress reporter so we print projects as they are loaded.\r\n                    var solution = await workspace.OpenSolutionAsync(targetPath);\r\n                    Console.WriteLine($\"Finished loading solution '{targetPath}'\");\r\n\r\n                    // Do analysis on the projects in the loaded solution\r\n                    foreach (var project in solution.Projects)\r\n                    {\r\n                        var graph = await ExploreProject(project);\r\n                        ExportGraphToJson(project.FilePath, project.AssemblyName, graph);\r\n                    }\r\n                }\r\n                else if (targetPath.EndsWith(\".csproj\", StringComparison.InvariantCultureIgnoreCase))\r\n                {\r\n                    Console.WriteLine($\"Loading project '{targetPath}'\");\r\n\r\n                    // Attach progress reporter so we print projects as they are loaded.\r\n                    var project = await workspace.OpenProjectAsync(targetPath);\r\n                    Console.WriteLine($\"Finished loading solution '{targetPath}'\");\r\n\r\n                    // Do analysis on the loaded project\r\n                    var graph = await ExploreProject(project);\r\n                    ExportGraphToJson(project.FilePath, project.AssemblyName, graph);\r\n                }\r\n                else\r\n                {\r\n                    Console.WriteLine(\"Invalid solution or project file. Exiting...\");\r\n                    return;\r\n                }\r\n            }",
+                  "type": "Statement",
+                  "category": "UsingStatement"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "ExploreProject",
+          "reference": "System.Threading.Tasks.Task`1",
+          "type": "Method",
+          "children": [
+            {
+              "label": "ExploreProject",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "project",
+                  "reference": "Project",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "ExploreProject",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "ExploreProject-0",
+                  "reference": "var compilation = await project.GetCompilationAsync();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreProject-1",
+                  "reference": "Console.WriteLine($\"Got compilation '{compilation.AssemblyName}'\");",
+                  "type": "Statement",
+                  "category": "ExpressionStatement"
+                },
+                {
+                  "label": "ExploreProject-2",
+                  "reference": "var allClasses = compilation.GlobalNamespace\r\n                .GetNamespaceMembers()\r\n                .Where(n => n.Name.StartsWith(project.DefaultNamespace))\r\n                .SelectMany(m => m.GetMembers());",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreProject-3",
+                  "reference": "var graph = new Graph();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreProject-4",
+                  "reference": "var nodes = new List<Node>();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreProject-5",
+                  "reference": "var edges = new List<Edge>();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreProject-6",
+                  "type": "Statement",
+                  "category": "ForEachStatement",
+                  "children": [
+                    {
+                      "label": "ExploreProject-6-0",
+                      "reference": "allClasses",
+                      "type": "Statement",
+                      "category": "IdentifierName"
+                    },
+                    {
+                      "label": "singleClass",
+                      "reference": "var",
+                      "type": "Variable"
+                    },
+                    {
+                      "label": "ExploreProject-6-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreProject-6-1-0",
+                          "reference": "var node = await ExploreSymbol(singleClass, edges);",
+                          "type": "Statement",
+                          "category": "LocalDeclarationStatement"
+                        },
+                        {
+                          "label": "ExploreProject-6-1-1",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreProject-6-1-1-0",
+                              "reference": "node != null",
+                              "type": "Statement",
+                              "category": "NotEqualsExpression"
+                            },
+                            {
+                              "label": "ExploreProject-6-1-1-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreProject-6-1-1-1-0",
+                                  "reference": "nodes.Add(node);",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreProject-7",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "ExploreProject-7-0",
+                      "reference": "nodes.Count > 0",
+                      "type": "Statement",
+                      "category": "GreaterThanExpression"
+                    },
+                    {
+                      "label": "ExploreProject-7-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreProject-7-1-0",
+                          "reference": "graph.Nodes = nodes;",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreProject-8",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "ExploreProject-8-0",
+                      "reference": "edges.Count > 0",
+                      "type": "Statement",
+                      "category": "GreaterThanExpression"
+                    },
+                    {
+                      "label": "ExploreProject-8-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreProject-8-1-0",
+                          "reference": "graph.Edges = edges.Distinct(new Edge.Comparer()).ToList();",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreProject-9",
+                  "reference": "return graph;",
+                  "type": "Statement",
+                  "category": "ReturnStatement"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "ExploreSymbol",
+          "reference": "System.Threading.Tasks.Task`1",
+          "type": "Method",
+          "children": [
+            {
+              "label": "ExploreSymbol",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "symbol",
+                  "reference": "ISymbol",
+                  "type": "Variable"
+                },
+                {
+                  "label": "edges",
+                  "reference": "List<Edge>",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "ExploreSymbol",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "ExploreSymbol-0",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "ExploreSymbol-0-0",
+                      "reference": "symbol.IsImplicitlyDeclared",
+                      "type": "Statement",
+                      "category": "SimpleMemberAccessExpression"
+                    },
+                    {
+                      "label": "ExploreSymbol-0-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreSymbol-0-1-0",
+                          "reference": "return null;",
+                          "type": "Statement",
+                          "category": "ReturnStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreSymbol-1",
+                  "reference": "var node = new Node\r\n            {\r\n                Label = symbol.MetadataName,\r\n                Type = symbol.Kind.ToNodeType(),\r\n            };",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreSymbol-2",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "ExploreSymbol-2-0",
+                      "reference": "symbol is INamedTypeSymbol @class",
+                      "type": "Statement",
+                      "category": "IsPatternExpression"
+                    },
+                    {
+                      "label": "ExploreSymbol-2-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreSymbol-2-1-0",
+                          "reference": "node.Reference = symbol.GetFullMetadataName();",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        },
+                        {
+                          "label": "ExploreSymbol-2-1-1",
+                          "reference": "var members = @class.GetMembers();",
+                          "type": "Statement",
+                          "category": "LocalDeclarationStatement"
+                        },
+                        {
+                          "label": "ExploreSymbol-2-1-2",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreSymbol-2-1-2-0",
+                              "reference": "members.Count() > 0",
+                              "type": "Statement",
+                              "category": "GreaterThanExpression"
+                            },
+                            {
+                              "label": "ExploreSymbol-2-1-2-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreSymbol-2-1-2-1-0",
+                                  "reference": "var children = new List<Node>();",
+                                  "type": "Statement",
+                                  "category": "LocalDeclarationStatement"
+                                },
+                                {
+                                  "label": "ExploreSymbol-2-1-2-1-1",
+                                  "type": "Statement",
+                                  "category": "ForEachStatement",
+                                  "children": [
+                                    {
+                                      "label": "ExploreSymbol-2-1-2-1-1-0",
+                                      "reference": "members",
+                                      "type": "Statement",
+                                      "category": "IdentifierName"
+                                    },
+                                    {
+                                      "label": "member",
+                                      "reference": "var",
+                                      "type": "Variable"
+                                    },
+                                    {
+                                      "label": "ExploreSymbol-2-1-2-1-1-1",
+                                      "type": "Statement",
+                                      "category": "Block",
+                                      "children": [
+                                        {
+                                          "label": "ExploreSymbol-2-1-2-1-1-1-0",
+                                          "reference": "var child = await ExploreSymbol(member, edges);",
+                                          "type": "Statement",
+                                          "category": "LocalDeclarationStatement"
+                                        },
+                                        {
+                                          "label": "ExploreSymbol-2-1-2-1-1-1-1",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreSymbol-2-1-2-1-1-1-1-0",
+                                              "reference": "child != null",
+                                              "type": "Statement",
+                                              "category": "NotEqualsExpression"
+                                            },
+                                            {
+                                              "label": "ExploreSymbol-2-1-2-1-1-1-1-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreSymbol-2-1-2-1-1-1-1-1-0",
+                                                  "reference": "children.Add(child);",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "label": "ExploreSymbol-2-1-2-1-2",
+                                  "reference": "node.Children = children;",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "label": "ExploreSymbol-2-2",
+                      "type": "Statement",
+                      "category": "ElseClause",
+                      "children": [
+                        {
+                          "label": "ExploreSymbol-2-2-0",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreSymbol-2-2-0-0",
+                              "reference": "symbol is IMethodSymbol method",
+                              "type": "Statement",
+                              "category": "IsPatternExpression"
+                            },
+                            {
+                              "label": "ExploreSymbol-2-2-0-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreSymbol-2-2-0-1-0",
+                                  "type": "Statement",
+                                  "category": "IfStatement",
+                                  "children": [
+                                    {
+                                      "label": "ExploreSymbol-2-2-0-1-0-0",
+                                      "reference": "method.MethodKind == MethodKind.Ordinary",
+                                      "type": "Statement",
+                                      "category": "EqualsExpression"
+                                    },
+                                    {
+                                      "label": "ExploreSymbol-2-2-0-1-0-1",
+                                      "type": "Statement",
+                                      "category": "Block",
+                                      "children": [
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-1-0-1-0",
+                                          "reference": "var reference = method.ReturnType.GetFullMetadataName();",
+                                          "type": "Statement",
+                                          "category": "LocalDeclarationStatement"
+                                        },
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-1-0-1-1",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-1-0-1-1-0",
+                                              "reference": "reference != typeof(void).FullName",
+                                              "type": "Statement",
+                                              "category": "NotEqualsExpression"
+                                            },
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-1-0-1-1-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-1-0-1-1-1-0",
+                                                  "reference": "node.Reference = reference;",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                },
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-1-0-1-1-1-1",
+                                                  "type": "Statement",
+                                                  "category": "IfStatement",
+                                                  "children": [
+                                                    {
+                                                      "label": "ExploreSymbol-2-2-0-1-0-1-1-1-1-0",
+                                                      "reference": "!reference.StartsWith(\"System\")",
+                                                      "type": "Statement",
+                                                      "category": "LogicalNotExpression"
+                                                    },
+                                                    {
+                                                      "label": "ExploreSymbol-2-2-0-1-0-1-1-1-1-1",
+                                                      "type": "Statement",
+                                                      "category": "Block",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreSymbol-2-2-0-1-0-1-1-1-1-1-0",
+                                                          "reference": "edges.Add(new Edge\r\n                            {\r\n                                From = method.GetFullMetadataName(),\r\n                                To = node.Reference,\r\n                                Label = \"Returns\",\r\n                            });",
+                                                          "type": "Statement",
+                                                          "category": "ExpressionStatement"
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "label": "ExploreSymbol-2-2-0-1-0-1-1-1-1-2",
+                                                      "type": "Statement",
+                                                      "category": "ElseClause",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreSymbol-2-2-0-1-0-1-1-1-1-2-0",
+                                                          "type": "Statement",
+                                                          "category": "Block"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-1-0-1-2",
+                                          "reference": "var children = await ExploreMethod(method, edges);",
+                                          "type": "Statement",
+                                          "category": "LocalDeclarationStatement"
+                                        },
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-1-0-1-3",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-1-0-1-3-0",
+                                              "reference": "children.Count() > 0",
+                                              "type": "Statement",
+                                              "category": "GreaterThanExpression"
+                                            },
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-1-0-1-3-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-1-0-1-3-1-0",
+                                                  "reference": "node.Children = children;",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "label": "ExploreSymbol-2-2-0-1-0-2",
+                                      "type": "Statement",
+                                      "category": "ElseClause",
+                                      "children": [
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-1-0-2-0",
+                                          "type": "Statement",
+                                          "category": "Block",
+                                          "children": [
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-1-0-2-0-0",
+                                              "reference": "return null;",
+                                              "type": "Statement",
+                                              "category": "ReturnStatement"
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "label": "ExploreSymbol-2-2-0-2",
+                              "type": "Statement",
+                              "category": "ElseClause",
+                              "children": [
+                                {
+                                  "label": "ExploreSymbol-2-2-0-2-0",
+                                  "type": "Statement",
+                                  "category": "IfStatement",
+                                  "children": [
+                                    {
+                                      "label": "ExploreSymbol-2-2-0-2-0-0",
+                                      "reference": "symbol is IPropertySymbol property",
+                                      "type": "Statement",
+                                      "category": "IsPatternExpression"
+                                    },
+                                    {
+                                      "label": "ExploreSymbol-2-2-0-2-0-1",
+                                      "type": "Statement",
+                                      "category": "Block",
+                                      "children": [
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-2-0-1-0",
+                                          "reference": "var reference = property.Type.GetFullMetadataName();",
+                                          "type": "Statement",
+                                          "category": "LocalDeclarationStatement"
+                                        },
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-2-0-1-1",
+                                          "reference": "node.Reference = reference;",
+                                          "type": "Statement",
+                                          "category": "ExpressionStatement"
+                                        },
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-2-0-1-2",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-2-0-1-2-0",
+                                              "reference": "!reference.StartsWith(\"System\")",
+                                              "type": "Statement",
+                                              "category": "LogicalNotExpression"
+                                            },
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-2-0-1-2-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-2-0-1-2-1-0",
+                                                  "reference": "edges.Add(new Edge\r\n                    {\r\n                        From = property.GetFullMetadataName(),\r\n                        To = node.Reference,\r\n                        Label = \"Instantiates\",\r\n                    });",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "label": "ExploreSymbol-2-2-0-2-0-2",
+                                      "type": "Statement",
+                                      "category": "ElseClause",
+                                      "children": [
+                                        {
+                                          "label": "ExploreSymbol-2-2-0-2-0-2-0",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-2-0-2-0-0",
+                                              "reference": "symbol is IFieldSymbol field",
+                                              "type": "Statement",
+                                              "category": "IsPatternExpression"
+                                            },
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-2-0-2-0-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-2-0-2-0-1-0",
+                                                  "reference": "var reference = field.Type.GetFullMetadataName();",
+                                                  "type": "Statement",
+                                                  "category": "LocalDeclarationStatement"
+                                                },
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-2-0-2-0-1-1",
+                                                  "reference": "node.Reference = reference;",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                },
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-2-0-2-0-1-2",
+                                                  "type": "Statement",
+                                                  "category": "IfStatement",
+                                                  "children": [
+                                                    {
+                                                      "label": "ExploreSymbol-2-2-0-2-0-2-0-1-2-0",
+                                                      "reference": "!reference.StartsWith(\"System\")",
+                                                      "type": "Statement",
+                                                      "category": "LogicalNotExpression"
+                                                    },
+                                                    {
+                                                      "label": "ExploreSymbol-2-2-0-2-0-2-0-1-2-1",
+                                                      "type": "Statement",
+                                                      "category": "Block",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreSymbol-2-2-0-2-0-2-0-1-2-1-0",
+                                                          "reference": "edges.Add(new Edge\r\n                    {\r\n                        From = field.GetFullMetadataName(),\r\n                        To = node.Reference,\r\n                        Label = \"Instantiates\",\r\n                    });",
+                                                          "type": "Statement",
+                                                          "category": "ExpressionStatement"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "label": "ExploreSymbol-2-2-0-2-0-2-0-2",
+                                              "type": "Statement",
+                                              "category": "ElseClause",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreSymbol-2-2-0-2-0-2-0-2-0",
+                                                  "type": "Statement",
+                                                  "category": "Block",
+                                                  "children": [
+                                                    {
+                                                      "label": "ExploreSymbol-2-2-0-2-0-2-0-2-0-0",
+                                                      "reference": "node.Reference = symbol.GetFullMetadataName();",
+                                                      "type": "Statement",
+                                                      "category": "ExpressionStatement"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreSymbol-3",
+                  "reference": "return node;",
+                  "type": "Statement",
+                  "category": "ReturnStatement"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "ExploreMethod",
+          "reference": "System.Threading.Tasks.Task`1",
+          "type": "Method",
+          "children": [
+            {
+              "label": "ExploreMethod",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "method",
+                  "reference": "IMethodSymbol",
+                  "type": "Variable"
+                },
+                {
+                  "label": "edges",
+                  "reference": "List<Edge>",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "ExploreMethod",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "ExploreMethod-0",
+                  "reference": "var nodes = new List<Node>();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreMethod-1",
+                  "reference": "var methodName = method.MetadataName;",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreMethod-2",
+                  "type": "Statement",
+                  "category": "ForEachStatement",
+                  "children": [
+                    {
+                      "label": "ExploreMethod-2-0",
+                      "reference": "method.DeclaringSyntaxReferences",
+                      "type": "Statement",
+                      "category": "SimpleMemberAccessExpression"
+                    },
+                    {
+                      "label": "syntaxReference",
+                      "reference": "var",
+                      "type": "Variable"
+                    },
+                    {
+                      "label": "ExploreMethod-2-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreMethod-2-1-0",
+                          "reference": "var methodSyntax = await syntaxReference.GetSyntaxAsync() as MethodDeclarationSyntax;",
+                          "type": "Statement",
+                          "category": "LocalDeclarationStatement"
+                        },
+                        {
+                          "label": "ExploreMethod-2-1-1",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreMethod-2-1-1-0",
+                              "reference": "methodSyntax == null",
+                              "type": "Statement",
+                              "category": "EqualsExpression"
+                            },
+                            {
+                              "label": "ExploreMethod-2-1-1-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreMethod-2-1-1-1-0",
+                                  "reference": "continue;",
+                                  "type": "Statement",
+                                  "category": "ContinueStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "label": "ExploreMethod-2-1-2",
+                          "reference": "nodes.Add(ExploreParameters(methodName, methodSyntax.ParameterList, edges));",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        },
+                        {
+                          "label": "ExploreMethod-2-1-3",
+                          "reference": "nodes.Add(ExploreStatement(methodName, methodSyntax.Body, edges));",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreMethod-3",
+                  "reference": "return nodes;",
+                  "type": "Statement",
+                  "category": "ReturnStatement"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "ExploreParameters",
+          "reference": "SampleAnalyzer.Model.Node",
+          "type": "Method",
+          "children": [
+            {
+              "label": "ExploreParameters",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "methodName",
+                  "reference": "string",
+                  "type": "Variable"
+                },
+                {
+                  "label": "parameterList",
+                  "reference": "ParameterListSyntax",
+                  "type": "Variable"
+                },
+                {
+                  "label": "edges",
+                  "reference": "List<Edge>",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "ExploreParameters",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "ExploreParameters-0",
+                  "reference": "var node = new Node\r\n            {\r\n                Label = methodName,\r\n                Type = NodeType.Parameter,\r\n                Children = new List<Node>(),\r\n            };",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreParameters-1",
+                  "type": "Statement",
+                  "category": "ForEachStatement",
+                  "children": [
+                    {
+                      "label": "ExploreParameters-1-0",
+                      "reference": "parameterList.Parameters",
+                      "type": "Statement",
+                      "category": "SimpleMemberAccessExpression"
+                    },
+                    {
+                      "label": "parameter",
+                      "reference": "var",
+                      "type": "Variable"
+                    },
+                    {
+                      "label": "ExploreParameters-1-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreParameters-1-1-0",
+                          "reference": "node.Children.Add(new Node\r\n                {\r\n                    Label = parameter.Identifier.Text,\r\n                    Reference = parameter.Type.ToString(),\r\n                    Type = NodeType.Variable,\r\n                });",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreParameters-2",
+                  "reference": "return node;",
+                  "type": "Statement",
+                  "category": "ReturnStatement"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "ExploreStatement",
+          "reference": "SampleAnalyzer.Model.Node",
+          "type": "Method",
+          "children": [
+            {
+              "label": "ExploreStatement",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "methodName",
+                  "reference": "string",
+                  "type": "Variable"
+                },
+                {
+                  "label": "statement",
+                  "reference": "CSharpSyntaxNode",
+                  "type": "Variable"
+                },
+                {
+                  "label": "edges",
+                  "reference": "List<Edge>",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "ExploreStatement",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "ExploreStatement-0",
+                  "reference": "var node = new Node\r\n            {\r\n                Label = methodName,\r\n                Type = NodeType.Statement,\r\n                Category = statement.Kind().ToString(),\r\n            };",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreStatement-1",
+                  "reference": "var counter = 0;",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExploreStatement-2",
+                  "type": "Statement",
+                  "category": "IfStatement",
+                  "children": [
+                    {
+                      "label": "ExploreStatement-2-0",
+                      "reference": "statement is ForStatementSyntax forStatement",
+                      "type": "Statement",
+                      "category": "IsPatternExpression"
+                    },
+                    {
+                      "label": "ExploreStatement-2-1",
+                      "type": "Statement",
+                      "category": "Block",
+                      "children": [
+                        {
+                          "label": "ExploreStatement-2-1-0",
+                          "reference": "var children = new List<Node>();",
+                          "type": "Statement",
+                          "category": "LocalDeclarationStatement"
+                        },
+                        {
+                          "label": "ExploreStatement-2-1-1",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreStatement-2-1-1-0",
+                              "reference": "forStatement.Declaration != null",
+                              "type": "Statement",
+                              "category": "NotEqualsExpression"
+                            },
+                            {
+                              "label": "ExploreStatement-2-1-1-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreStatement-2-1-1-1-0",
+                                  "reference": "children.Add(\r\n                        ExploreStatement(\r\n                            string.Format(\"{0}-{1}\", methodName, counter++),\r\n                            forStatement.Declaration,\r\n                            edges\r\n                        )\r\n                    );",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "label": "ExploreStatement-2-1-2",
+                          "type": "Statement",
+                          "category": "ForEachStatement",
+                          "children": [
+                            {
+                              "label": "ExploreStatement-2-1-2-0",
+                              "reference": "forStatement.Initializers",
+                              "type": "Statement",
+                              "category": "SimpleMemberAccessExpression"
+                            },
+                            {
+                              "label": "initializer",
+                              "reference": "var",
+                              "type": "Variable"
+                            },
+                            {
+                              "label": "ExploreStatement-2-1-2-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreStatement-2-1-2-1-0",
+                                  "reference": "children.Add(\r\n                        ExploreStatement(\r\n                            string.Format(\"{0}-{1}\", methodName, counter++),\r\n                            initializer,\r\n                            edges\r\n                        )\r\n                    );",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "label": "ExploreStatement-2-1-3",
+                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        forStatement.Condition,\r\n                        edges\r\n                    )\r\n                );",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        },
+                        {
+                          "label": "ExploreStatement-2-1-4",
+                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        forStatement.Statement,\r\n                        edges\r\n                    )\r\n                );",
+                          "type": "Statement",
+                          "category": "ExpressionStatement"
+                        },
+                        {
+                          "label": "ExploreStatement-2-1-5",
+                          "type": "Statement",
+                          "category": "ForEachStatement",
+                          "children": [
+                            {
+                              "label": "ExploreStatement-2-1-5-0",
+                              "reference": "forStatement.Incrementors",
+                              "type": "Statement",
+                              "category": "SimpleMemberAccessExpression"
+                            },
+                            {
+                              "label": "incrementor",
+                              "reference": "var",
+                              "type": "Variable"
+                            },
+                            {
+                              "label": "ExploreStatement-2-1-5-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreStatement-2-1-5-1-0",
+                                  "reference": "children.Add(\r\n                        ExploreStatement(\r\n                            string.Format(\"{0}-{1}\", methodName, counter++),\r\n                            incrementor,\r\n                            edges\r\n                        )\r\n                    );",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "label": "ExploreStatement-2-1-6",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreStatement-2-1-6-0",
+                              "reference": "children.Count > 0",
+                              "type": "Statement",
+                              "category": "GreaterThanExpression"
+                            },
+                            {
+                              "label": "ExploreStatement-2-1-6-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreStatement-2-1-6-1-0",
+                                  "reference": "node.Children = children;",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "label": "ExploreStatement-2-2",
+                      "type": "Statement",
+                      "category": "ElseClause",
+                      "children": [
+                        {
+                          "label": "ExploreStatement-2-2-0",
+                          "type": "Statement",
+                          "category": "IfStatement",
+                          "children": [
+                            {
+                              "label": "ExploreStatement-2-2-0-0",
+                              "reference": "statement is ForEachStatementSyntax foreachStatement",
+                              "type": "Statement",
+                              "category": "IsPatternExpression"
+                            },
+                            {
+                              "label": "ExploreStatement-2-2-0-1",
+                              "type": "Statement",
+                              "category": "Block",
+                              "children": [
+                                {
+                                  "label": "ExploreStatement-2-2-0-1-0",
+                                  "reference": "var children = new List<Node>();",
+                                  "type": "Statement",
+                                  "category": "LocalDeclarationStatement"
+                                },
+                                {
+                                  "label": "ExploreStatement-2-2-0-1-1",
+                                  "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        foreachStatement.Expression,\r\n                        edges\r\n                    )\r\n                );",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                },
+                                {
+                                  "label": "ExploreStatement-2-2-0-1-2",
+                                  "reference": "children.Add(new Node\r\n                {\r\n                    Label = foreachStatement.Identifier.Text,\r\n                    Reference = foreachStatement.Type.ToString(),\r\n                    Type = NodeType.Variable,\r\n                });",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                },
+                                {
+                                  "label": "ExploreStatement-2-2-0-1-3",
+                                  "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        foreachStatement.Statement,\r\n                        edges\r\n                    )\r\n                );",
+                                  "type": "Statement",
+                                  "category": "ExpressionStatement"
+                                },
+                                {
+                                  "label": "ExploreStatement-2-2-0-1-4",
+                                  "type": "Statement",
+                                  "category": "IfStatement",
+                                  "children": [
+                                    {
+                                      "label": "ExploreStatement-2-2-0-1-4-0",
+                                      "reference": "children.Count > 0",
+                                      "type": "Statement",
+                                      "category": "GreaterThanExpression"
+                                    },
+                                    {
+                                      "label": "ExploreStatement-2-2-0-1-4-1",
+                                      "type": "Statement",
+                                      "category": "Block",
+                                      "children": [
+                                        {
+                                          "label": "ExploreStatement-2-2-0-1-4-1-0",
+                                          "reference": "node.Children = children;",
+                                          "type": "Statement",
+                                          "category": "ExpressionStatement"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "label": "ExploreStatement-2-2-0-2",
+                              "type": "Statement",
+                              "category": "ElseClause",
+                              "children": [
+                                {
+                                  "label": "ExploreStatement-2-2-0-2-0",
+                                  "type": "Statement",
+                                  "category": "IfStatement",
+                                  "children": [
+                                    {
+                                      "label": "ExploreStatement-2-2-0-2-0-0",
+                                      "reference": "statement is ForEachVariableStatementSyntax foreachvarStatement",
+                                      "type": "Statement",
+                                      "category": "IsPatternExpression"
+                                    },
+                                    {
+                                      "label": "ExploreStatement-2-2-0-2-0-1",
+                                      "type": "Statement",
+                                      "category": "Block",
+                                      "children": [
+                                        {
+                                          "label": "ExploreStatement-2-2-0-2-0-1-0",
+                                          "reference": "var children = new List<Node>();",
+                                          "type": "Statement",
+                                          "category": "LocalDeclarationStatement"
+                                        },
+                                        {
+                                          "label": "ExploreStatement-2-2-0-2-0-1-1",
+                                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        foreachvarStatement.Expression,\r\n                        edges\r\n                    )\r\n                );",
+                                          "type": "Statement",
+                                          "category": "ExpressionStatement"
+                                        },
+                                        {
+                                          "label": "ExploreStatement-2-2-0-2-0-1-2",
+                                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        foreachvarStatement.Variable,\r\n                        edges\r\n                    )\r\n                );",
+                                          "type": "Statement",
+                                          "category": "ExpressionStatement"
+                                        },
+                                        {
+                                          "label": "ExploreStatement-2-2-0-2-0-1-3",
+                                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        foreachvarStatement.Statement,\r\n                        edges\r\n                    )\r\n                );",
+                                          "type": "Statement",
+                                          "category": "ExpressionStatement"
+                                        },
+                                        {
+                                          "label": "ExploreStatement-2-2-0-2-0-1-4",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreStatement-2-2-0-2-0-1-4-0",
+                                              "reference": "children.Count > 0",
+                                              "type": "Statement",
+                                              "category": "GreaterThanExpression"
+                                            },
+                                            {
+                                              "label": "ExploreStatement-2-2-0-2-0-1-4-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-1-4-1-0",
+                                                  "reference": "node.Children = children;",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "label": "ExploreStatement-2-2-0-2-0-2",
+                                      "type": "Statement",
+                                      "category": "ElseClause",
+                                      "children": [
+                                        {
+                                          "label": "ExploreStatement-2-2-0-2-0-2-0",
+                                          "type": "Statement",
+                                          "category": "IfStatement",
+                                          "children": [
+                                            {
+                                              "label": "ExploreStatement-2-2-0-2-0-2-0-0",
+                                              "reference": "statement is IfStatementSyntax ifStatement",
+                                              "type": "Statement",
+                                              "category": "IsPatternExpression"
+                                            },
+                                            {
+                                              "label": "ExploreStatement-2-2-0-2-0-2-0-1",
+                                              "type": "Statement",
+                                              "category": "Block",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-1-0",
+                                                  "reference": "var children = new List<Node>();",
+                                                  "type": "Statement",
+                                                  "category": "LocalDeclarationStatement"
+                                                },
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-1-1",
+                                                  "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        ifStatement.Condition,\r\n                        edges\r\n                    )\r\n                );",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                },
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-1-2",
+                                                  "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        ifStatement.Statement,\r\n                        edges\r\n                    )\r\n                );",
+                                                  "type": "Statement",
+                                                  "category": "ExpressionStatement"
+                                                },
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-1-3",
+                                                  "type": "Statement",
+                                                  "category": "IfStatement",
+                                                  "children": [
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-1-3-0",
+                                                      "reference": "ifStatement.Else != null",
+                                                      "type": "Statement",
+                                                      "category": "NotEqualsExpression"
+                                                    },
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-1-3-1",
+                                                      "type": "Statement",
+                                                      "category": "Block",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-1-3-1-0",
+                                                          "reference": "children.Add(\r\n                        ExploreStatement(\r\n                            string.Format(\"{0}-{1}\", methodName, counter++),\r\n                            ifStatement.Else,\r\n                            edges\r\n                        )\r\n                    );",
+                                                          "type": "Statement",
+                                                          "category": "ExpressionStatement"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-1-4",
+                                                  "type": "Statement",
+                                                  "category": "IfStatement",
+                                                  "children": [
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-1-4-0",
+                                                      "reference": "children.Count > 0",
+                                                      "type": "Statement",
+                                                      "category": "GreaterThanExpression"
+                                                    },
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-1-4-1",
+                                                      "type": "Statement",
+                                                      "category": "Block",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-1-4-1-0",
+                                                          "reference": "node.Children = children;",
+                                                          "type": "Statement",
+                                                          "category": "ExpressionStatement"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2",
+                                              "type": "Statement",
+                                              "category": "ElseClause",
+                                              "children": [
+                                                {
+                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0",
+                                                  "type": "Statement",
+                                                  "category": "IfStatement",
+                                                  "children": [
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-0",
+                                                      "reference": "statement is ElseClauseSyntax elseStatement",
+                                                      "type": "Statement",
+                                                      "category": "IsPatternExpression"
+                                                    },
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-1",
+                                                      "type": "Statement",
+                                                      "category": "Block",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-1-0",
+                                                          "reference": "var children = new List<Node>();",
+                                                          "type": "Statement",
+                                                          "category": "LocalDeclarationStatement"
+                                                        },
+                                                        {
+                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-1-1",
+                                                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        elseStatement.Statement,\r\n                        edges\r\n                    )\r\n                );",
+                                                          "type": "Statement",
+                                                          "category": "ExpressionStatement"
+                                                        },
+                                                        {
+                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-1-2",
+                                                          "reference": "node.Children = children;",
+                                                          "type": "Statement",
+                                                          "category": "ExpressionStatement"
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2",
+                                                      "type": "Statement",
+                                                      "category": "ElseClause",
+                                                      "children": [
+                                                        {
+                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0",
+                                                          "type": "Statement",
+                                                          "category": "IfStatement",
+                                                          "children": [
+                                                            {
+                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-0",
+                                                              "reference": "statement is WhileStatementSyntax whileStatement",
+                                                              "type": "Statement",
+                                                              "category": "IsPatternExpression"
+                                                            },
+                                                            {
+                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-1",
+                                                              "type": "Statement",
+                                                              "category": "Block",
+                                                              "children": [
+                                                                {
+                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-1-0",
+                                                                  "reference": "var children = new List<Node>();",
+                                                                  "type": "Statement",
+                                                                  "category": "LocalDeclarationStatement"
+                                                                },
+                                                                {
+                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-1-1",
+                                                                  "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        whileStatement.Condition,\r\n                        edges\r\n                    )\r\n                );",
+                                                                  "type": "Statement",
+                                                                  "category": "ExpressionStatement"
+                                                                },
+                                                                {
+                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-1-2",
+                                                                  "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        whileStatement.Statement,\r\n                        edges\r\n                    )\r\n                );",
+                                                                  "type": "Statement",
+                                                                  "category": "ExpressionStatement"
+                                                                },
+                                                                {
+                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-1-3",
+                                                                  "reference": "node.Children = children;",
+                                                                  "type": "Statement",
+                                                                  "category": "ExpressionStatement"
+                                                                }
+                                                              ]
+                                                            },
+                                                            {
+                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2",
+                                                              "type": "Statement",
+                                                              "category": "ElseClause",
+                                                              "children": [
+                                                                {
+                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0",
+                                                                  "type": "Statement",
+                                                                  "category": "IfStatement",
+                                                                  "children": [
+                                                                    {
+                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-0",
+                                                                      "reference": "statement is SwitchStatementSyntax switchStatement",
+                                                                      "type": "Statement",
+                                                                      "category": "IsPatternExpression"
+                                                                    },
+                                                                    {
+                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1",
+                                                                      "type": "Statement",
+                                                                      "category": "Block",
+                                                                      "children": [
+                                                                        {
+                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-0",
+                                                                          "reference": "var children = new List<Node>();",
+                                                                          "type": "Statement",
+                                                                          "category": "LocalDeclarationStatement"
+                                                                        },
+                                                                        {
+                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-1",
+                                                                          "reference": "children.Add(\r\n                    ExploreStatement(\r\n                        string.Format(\"{0}-{1}\", methodName, counter++),\r\n                        switchStatement.Expression,\r\n                        edges\r\n                    )\r\n                );",
+                                                                          "type": "Statement",
+                                                                          "category": "ExpressionStatement"
+                                                                        },
+                                                                        {
+                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-2",
+                                                                          "type": "Statement",
+                                                                          "category": "ForEachStatement",
+                                                                          "children": [
+                                                                            {
+                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-2-0",
+                                                                              "reference": "switchStatement.Sections",
+                                                                              "type": "Statement",
+                                                                              "category": "SimpleMemberAccessExpression"
+                                                                            },
+                                                                            {
+                                                                              "label": "section",
+                                                                              "reference": "var",
+                                                                              "type": "Variable"
+                                                                            },
+                                                                            {
+                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1",
+                                                                              "type": "Statement",
+                                                                              "category": "Block",
+                                                                              "children": [
+                                                                                {
+                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-0",
+                                                                                  "reference": "children.Add(\r\n                        ExploreStatement(\r\n                            string.Format(\"{0}-{1}\", methodName, counter++),\r\n                            section,\r\n                            edges\r\n                        )\r\n                    );",
+                                                                                  "type": "Statement",
+                                                                                  "category": "ExpressionStatement"
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        },
+                                                                        {
+                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-1-3",
+                                                                          "reference": "node.Children = children;",
+                                                                          "type": "Statement",
+                                                                          "category": "ExpressionStatement"
+                                                                        }
+                                                                      ]
+                                                                    },
+                                                                    {
+                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2",
+                                                                      "type": "Statement",
+                                                                      "category": "ElseClause",
+                                                                      "children": [
+                                                                        {
+                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0",
+                                                                          "type": "Statement",
+                                                                          "category": "IfStatement",
+                                                                          "children": [
+                                                                            {
+                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-0",
+                                                                              "reference": "statement is SwitchSectionSyntax switchSectionStatement",
+                                                                              "type": "Statement",
+                                                                              "category": "IsPatternExpression"
+                                                                            },
+                                                                            {
+                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1",
+                                                                              "type": "Statement",
+                                                                              "category": "Block",
+                                                                              "children": [
+                                                                                {
+                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-0",
+                                                                                  "reference": "var children = new List<Node>();",
+                                                                                  "type": "Statement",
+                                                                                  "category": "LocalDeclarationStatement"
+                                                                                },
+                                                                                {
+                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1",
+                                                                                  "type": "Statement",
+                                                                                  "category": "IfStatement",
+                                                                                  "children": [
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-0",
+                                                                                      "reference": "switchSectionStatement.Labels.Count > 0",
+                                                                                      "type": "Statement",
+                                                                                      "category": "GreaterThanExpression"
+                                                                                    },
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1",
+                                                                                      "type": "Statement",
+                                                                                      "category": "Block",
+                                                                                      "children": [
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-0",
+                                                                                          "reference": "var labelsLabel = string.Format(\"{0}-{1}\", methodName, counter++);",
+                                                                                          "type": "Statement",
+                                                                                          "category": "LocalDeclarationStatement"
+                                                                                        },
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-1",
+                                                                                          "reference": "var labelsNode = new Node\r\n                    {\r\n                        Label = labelsLabel,\r\n                        Type = NodeType.Statement,\r\n                        Category = \"SwitchLabels\",\r\n                        Children = new List<Node>(),\r\n                    };",
+                                                                                          "type": "Statement",
+                                                                                          "category": "LocalDeclarationStatement"
+                                                                                        },
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-2",
+                                                                                          "type": "Statement",
+                                                                                          "category": "ForStatement",
+                                                                                          "children": [
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-2-0",
+                                                                                              "reference": "var labelIndex = 0",
+                                                                                              "type": "Statement",
+                                                                                              "category": "VariableDeclaration"
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-2-1",
+                                                                                              "reference": "labelIndex < switchSectionStatement.Labels.Count",
+                                                                                              "type": "Statement",
+                                                                                              "category": "LessThanExpression"
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-2-2",
+                                                                                              "type": "Statement",
+                                                                                              "category": "Block",
+                                                                                              "children": [
+                                                                                                {
+                                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-2-2-0",
+                                                                                                  "reference": "labelsNode.Children.Add(\r\n                            ExploreStatement(\r\n                                string.Format(\"{0}-{1}\", labelsLabel, labelIndex),\r\n                                switchSectionStatement.Labels[labelIndex],\r\n                                edges\r\n                            )\r\n                        );",
+                                                                                                  "type": "Statement",
+                                                                                                  "category": "ExpressionStatement"
+                                                                                                }
+                                                                                              ]
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-2-3",
+                                                                                              "reference": "labelIndex++",
+                                                                                              "type": "Statement",
+                                                                                              "category": "PostIncrementExpression"
+                                                                                            }
+                                                                                          ]
+                                                                                        },
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-3",
+                                                                                          "reference": "children.Add(labelsNode);",
+                                                                                          "type": "Statement",
+                                                                                          "category": "ExpressionStatement"
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                },
+                                                                                {
+                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2",
+                                                                                  "type": "Statement",
+                                                                                  "category": "IfStatement",
+                                                                                  "children": [
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-0",
+                                                                                      "reference": "switchSectionStatement.Statements.Count > 0",
+                                                                                      "type": "Statement",
+                                                                                      "category": "GreaterThanExpression"
+                                                                                    },
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1",
+                                                                                      "type": "Statement",
+                                                                                      "category": "Block",
+                                                                                      "children": [
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-0",
+                                                                                          "reference": "var statementsLabel = string.Format(\"{0}-{1}\", methodName, counter++);",
+                                                                                          "type": "Statement",
+                                                                                          "category": "LocalDeclarationStatement"
+                                                                                        },
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-1",
+                                                                                          "reference": "var statementsNode = new Node\r\n                    {\r\n                        Label = statementsLabel,\r\n                        Type = NodeType.Statement,\r\n                        Category = \"SwitchStatements\",\r\n                        Children = new List<Node>(),\r\n                    };",
+                                                                                          "type": "Statement",
+                                                                                          "category": "LocalDeclarationStatement"
+                                                                                        },
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-2",
+                                                                                          "type": "Statement",
+                                                                                          "category": "ForStatement",
+                                                                                          "children": [
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-2-0",
+                                                                                              "reference": "var statementIndex = 0",
+                                                                                              "type": "Statement",
+                                                                                              "category": "VariableDeclaration"
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-2-1",
+                                                                                              "reference": "statementIndex < switchSectionStatement.Statements.Count",
+                                                                                              "type": "Statement",
+                                                                                              "category": "LessThanExpression"
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-2-2",
+                                                                                              "type": "Statement",
+                                                                                              "category": "Block",
+                                                                                              "children": [
+                                                                                                {
+                                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-2-2-0",
+                                                                                                  "reference": "statementsNode.Children.Add(\r\n                            ExploreStatement(\r\n                                string.Format(\"{0}-{1}\", statementsLabel, statementIndex),\r\n                                switchSectionStatement.Statements[statementIndex],\r\n                                edges\r\n                            )\r\n                        );",
+                                                                                                  "type": "Statement",
+                                                                                                  "category": "ExpressionStatement"
+                                                                                                }
+                                                                                              ]
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-2-3",
+                                                                                              "reference": "statementIndex++",
+                                                                                              "type": "Statement",
+                                                                                              "category": "PostIncrementExpression"
+                                                                                            }
+                                                                                          ]
+                                                                                        },
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-3",
+                                                                                          "reference": "children.Add(statementsNode);",
+                                                                                          "type": "Statement",
+                                                                                          "category": "ExpressionStatement"
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                },
+                                                                                {
+                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-3",
+                                                                                  "reference": "node.Children = children;",
+                                                                                  "type": "Statement",
+                                                                                  "category": "ExpressionStatement"
+                                                                                }
+                                                                              ]
+                                                                            },
+                                                                            {
+                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2",
+                                                                              "type": "Statement",
+                                                                              "category": "ElseClause",
+                                                                              "children": [
+                                                                                {
+                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0",
+                                                                                  "type": "Statement",
+                                                                                  "category": "IfStatement",
+                                                                                  "children": [
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-0",
+                                                                                      "reference": "statement is CaseSwitchLabelSyntax caseSwitchLabelStatement",
+                                                                                      "type": "Statement",
+                                                                                      "category": "IsPatternExpression"
+                                                                                    },
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1",
+                                                                                      "type": "Statement",
+                                                                                      "category": "Block",
+                                                                                      "children": [
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-0",
+                                                                                          "reference": "return ExploreStatement(\r\n                    methodName,\r\n                    caseSwitchLabelStatement.Value,\r\n                    edges);",
+                                                                                          "type": "Statement",
+                                                                                          "category": "ReturnStatement"
+                                                                                        }
+                                                                                      ]
+                                                                                    },
+                                                                                    {
+                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2",
+                                                                                      "type": "Statement",
+                                                                                      "category": "ElseClause",
+                                                                                      "children": [
+                                                                                        {
+                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0",
+                                                                                          "type": "Statement",
+                                                                                          "category": "IfStatement",
+                                                                                          "children": [
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-0",
+                                                                                              "reference": "statement is BlockSyntax blockStatement",
+                                                                                              "type": "Statement",
+                                                                                              "category": "IsPatternExpression"
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1",
+                                                                                              "type": "Statement",
+                                                                                              "category": "Block",
+                                                                                              "children": [
+                                                                                                {
+                                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-0",
+                                                                                                  "reference": "var children = new List<Node>();",
+                                                                                                  "type": "Statement",
+                                                                                                  "category": "LocalDeclarationStatement"
+                                                                                                },
+                                                                                                {
+                                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1",
+                                                                                                  "type": "Statement",
+                                                                                                  "category": "ForEachStatement",
+                                                                                                  "children": [
+                                                                                                    {
+                                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-0",
+                                                                                                      "reference": "blockStatement.Statements",
+                                                                                                      "type": "Statement",
+                                                                                                      "category": "SimpleMemberAccessExpression"
+                                                                                                    },
+                                                                                                    {
+                                                                                                      "label": "innerStatement",
+                                                                                                      "reference": "var",
+                                                                                                      "type": "Variable"
+                                                                                                    },
+                                                                                                    {
+                                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1",
+                                                                                                      "type": "Statement",
+                                                                                                      "category": "Block",
+                                                                                                      "children": [
+                                                                                                        {
+                                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-1-1-0",
+                                                                                                          "reference": "children.Add(\r\n                        ExploreStatement(\r\n                            string.Format(\"{0}-{1}\", methodName, counter++),\r\n                            innerStatement,\r\n                            edges\r\n                        )\r\n                    );",
+                                                                                                          "type": "Statement",
+                                                                                                          "category": "ExpressionStatement"
+                                                                                                        }
+                                                                                                      ]
+                                                                                                    }
+                                                                                                  ]
+                                                                                                },
+                                                                                                {
+                                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2",
+                                                                                                  "type": "Statement",
+                                                                                                  "category": "IfStatement",
+                                                                                                  "children": [
+                                                                                                    {
+                                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-0",
+                                                                                                      "reference": "children.Count > 0",
+                                                                                                      "type": "Statement",
+                                                                                                      "category": "GreaterThanExpression"
+                                                                                                    },
+                                                                                                    {
+                                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1",
+                                                                                                      "type": "Statement",
+                                                                                                      "category": "Block",
+                                                                                                      "children": [
+                                                                                                        {
+                                                                                                          "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-1-2-1-0",
+                                                                                                          "reference": "node.Children = children;",
+                                                                                                          "type": "Statement",
+                                                                                                          "category": "ExpressionStatement"
+                                                                                                        }
+                                                                                                      ]
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ]
+                                                                                            },
+                                                                                            {
+                                                                                              "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2",
+                                                                                              "type": "Statement",
+                                                                                              "category": "ElseClause",
+                                                                                              "children": [
+                                                                                                {
+                                                                                                  "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0",
+                                                                                                  "type": "Statement",
+                                                                                                  "category": "Block",
+                                                                                                  "children": [
+                                                                                                    {
+                                                                                                      "label": "ExploreStatement-2-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-2-0-0",
+                                                                                                      "reference": "node.Reference = statement.ToString();",
+                                                                                                      "type": "Statement",
+                                                                                                      "category": "ExpressionStatement"
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              ]
+                                                                                            }
+                                                                                          ]
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  ]
+                                                                                }
+                                                                              ]
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      ]
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "label": "ExploreStatement-3",
+                  "reference": "return node;",
+                  "type": "Statement",
+                  "category": "ReturnStatement"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "ExportGraphToJson",
+          "type": "Method",
+          "children": [
+            {
+              "label": "ExportGraphToJson",
+              "type": "Parameter",
+              "children": [
+                {
+                  "label": "projectPath",
+                  "reference": "string",
+                  "type": "Variable"
+                },
+                {
+                  "label": "projectName",
+                  "reference": "string",
+                  "type": "Variable"
+                },
+                {
+                  "label": "graph",
+                  "reference": "Graph",
+                  "type": "Variable"
+                }
+              ]
+            },
+            {
+              "label": "ExportGraphToJson",
+              "type": "Statement",
+              "category": "Block",
+              "children": [
+                {
+                  "label": "ExportGraphToJson-0",
+                  "reference": "var filepath = Path.Combine(Path.GetDirectoryName(projectPath), \"output\");",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExportGraphToJson-1",
+                  "reference": "Directory.CreateDirectory(filepath);",
+                  "type": "Statement",
+                  "category": "ExpressionStatement"
+                },
+                {
+                  "label": "ExportGraphToJson-2",
+                  "reference": "var filename = Path.Combine(filepath, projectName + \".json\");",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExportGraphToJson-3",
+                  "reference": "var content = graph.ToString();",
+                  "type": "Statement",
+                  "category": "LocalDeclarationStatement"
+                },
+                {
+                  "label": "ExportGraphToJson-4",
+                  "reference": "File.WriteAllText(filename, content);",
+                  "type": "Statement",
+                  "category": "ExpressionStatement"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "SampleAnalyzer.Program.ExploreParameters",
+      "to": "SampleAnalyzer.Model.Node",
+      "label": "Returns"
+    },
+    {
+      "from": "SampleAnalyzer.Program.ExploreStatement",
+      "to": "SampleAnalyzer.Model.Node",
+      "label": "Returns"
+    }
+  ]
+}
